@@ -1,5 +1,5 @@
 // 云函数：日程提醒推送
-// 每分钟由定时触发器调用，查询即将到期的日程并发送订阅消息
+// 每分钟由定时触发器调用，查询已到期但未提醒的日程并发送订阅消息
 
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
@@ -12,21 +12,24 @@ const TEMPLATE_ID = '2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY';
 
 exports.main = async (event, context) => {
   const now = new Date();
-  // 查询窗口：当前时间 ~ 当前时间+1分钟
-  const windowEnd = new Date(now.getTime() + 60 * 1000);
+  // 安全上界：当前时间+2分钟（容错窗口，防止触发器执行时间偏移导致漏查）
+  const windowEnd = new Date(now.getTime() + 2 * 60 * 1000);
+  // 安全下界：当前时间-30分钟（避免发送很久以前的过期提醒）
+  const cutoff = new Date(now.getTime() - 30 * 60 * 1000);
 
   try {
-    // 查询 remindAt 在当前分钟内且未发送过提醒的日程
+    // 查询条件：remindAt 在 [30分钟前, 2分钟后] 之间，且未发送过提醒
+    // 不再用1分钟窄窗口，大幅减少漏查概率
     const res = await db.collection('schedules')
       .where({
         remind: true,
         reminded: _.neq(true),
-        remindAt: _.gte(now.toISOString()).and(_.lt(windowEnd.toISOString()))
+        remindAt: _.gte(cutoff.toISOString()).and(_.lt(windowEnd.toISOString()))
       })
       .limit(100)
       .get();
 
-    console.log(`查询到 ${res.data.length} 条待提醒日程`);
+    console.log(`查询到 ${res.data.length} 条待提醒日程, 当前UTC: ${now.toISOString()}`);
 
     const results = [];
 
@@ -38,14 +41,13 @@ exports.main = async (event, context) => {
           templateId: TEMPLATE_ID,
           page: `pages/detail/detail?id=${item.id}`,
           data: {
-            // 模板字段：thing2=提醒内容, date4=日程时间
-            thing2: { value: item.title.substring(0, 20) },                          // 提醒内容
-            date4: { value: formatDateTime(item.date, item.time) }                     // 日程时间
+            thing2: { value: item.title.substring(0, 20) },
+            date4: { value: formatDateTime(item.date, item.time) }
           },
           miniprogramState: 'formal'
         });
 
-        // 标记已提醒
+        // 标记已提醒，防止重复发送
         await db.collection('schedules').doc(item._id).update({
           data: { reminded: true }
         });
