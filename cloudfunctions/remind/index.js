@@ -38,11 +38,9 @@ exports.main = async (event, context) => {
           templateId: TEMPLATE_ID,
           page: `pages/detail/detail?id=${item.id}`,
           data: {
-            // 模板字段需与公众平台申请的模板一致
-            // 常见字段映射：
-            thing1: { value: item.title },                         // 日程标题
-            time2: { value: formatDateTime(item.date, item.time) }, // 日程时间
-            thing3: { value: (item.detail || '无').substring(0, 20) } // 备注
+            // 模板字段：thing2=提醒内容, date4=日程时间
+            thing2: { value: item.title.substring(0, 20) },                          // 提醒内容
+            date4: { value: formatDateTime(item.date, item.time) }                     // 日程时间
           },
           miniprogramState: 'formal'
         });
