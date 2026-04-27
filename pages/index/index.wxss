@@ -1,4 +1,4 @@
-/* 添加日程页面样式 */
+/* 添加/编辑日程页面样式 */
 
 .container {
   padding: 40rpx 32rpx;
@@ -48,7 +48,7 @@
   line-height: 56rpx;
 }
 
-/* 日期选择器 */
+/* 选择器 */
 .picker-display {
   display: flex;
   justify-content: space-between;
@@ -70,6 +70,17 @@
 .picker-arrow {
   font-size: 28rpx;
   color: #ccc;
+}
+
+/* 开关行 */
+.switch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.switch-item .label {
+  margin-bottom: 0;
 }
 
 /* 多行文本 */
@@ -99,7 +110,6 @@
   color: #ffffff;
 }
 
-/* 按下态 */
 .save-btn:not([disabled]):active {
   opacity: 0.85;
 }

@@ -1,0 +1,37 @@
+<view class="container">
+  <!-- 日程信息卡 -->
+  <view class="info-card">
+    <view class="info-title-row">
+      <view class="check-circle {{schedule.completed ? 'checked' : ''}}" bindtap="onToggleComplete">
+        <text wx:if="{{schedule.completed}}">✓</text>
+      </view>
+      <text class="info-title {{schedule.completed ? 'title-completed' : ''}}">{{schedule.title}}</text>
+    </view>
+
+    <view class="info-meta">
+      <view class="meta-item">
+        <text class="meta-icon">📅</text>
+        <text class="meta-text">{{schedule.date}}</text>
+      </view>
+      <view class="meta-item" wx:if="{{schedule.time}}">
+        <text class="meta-icon">🕐</text>
+        <text class="meta-text">{{schedule.time}}</text>
+      </view>
+      <view class="meta-item" wx:if="{{schedule.remind}}">
+        <text class="meta-icon">🔔</text>
+        <text class="meta-text">已设提醒{{schedule.remindIndex ? '（' + remindOptions[schedule.remindIndex] + '）' : ''}}</text>
+      </view>
+    </view>
+
+    <view class="info-detail" wx:if="{{schedule.detail}}">
+      <text class="detail-label">详情</text>
+      <text class="detail-content">{{schedule.detail}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="action-btn edit-btn" bindtap="onEdit">编辑</button>
+    <button class="action-btn delete-btn" bindtap="onDelete">删除</button>
+  </view>
+</view>

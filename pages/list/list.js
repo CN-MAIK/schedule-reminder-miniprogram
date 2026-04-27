@@ -2,59 +2,76 @@
 
 Page({
   data: {
-    schedules: []  // 日程列表
+    schedules: [],
+    filteredList: [],
+    filter: 'all'  // all | pending | completed
   },
 
   onShow() {
-    // 每次页面显示时重新加载数据（从添加页返回时会触发）
     this.loadSchedules();
   },
 
   /** 从本地存储加载日程 */
   loadSchedules() {
-    const schedules = wx.getStorageSync('schedules') || [];
-    // 按日期排序，最近的排前面
+    let schedules = wx.getStorageSync('schedules') || [];
+    // 兼容旧数据：补全字段
+    schedules = schedules.map(item => ({
+      ...item,
+      time: item.time || '',
+      remind: item.remind || false,
+      remindIndex: item.remindIndex || 0,
+      completed: item.completed || false
+    }));
+    // 按日期+时间排序，最近的排前面
     schedules.sort((a, b) => {
-      if (a.date === b.date) {
-        return b.id - a.id;  // 同一天按创建时间倒序
-      }
-      return a.date > b.date ? -1 : 1;
+      const aKey = a.date + (a.time ? ' ' + a.time : '');
+      const bKey = b.date + (b.time ? ' ' + b.time : '');
+      if (aKey === bKey) return b.id - a.id;
+      return aKey > bKey ? -1 : 1;
     });
+    wx.setStorageSync('schedules', schedules);
     this.setData({ schedules });
+    this.applyFilter();
   },
 
-  /** 点击日程卡片 — 查看详情 */
+  /** 应用筛选 */
+  applyFilter() {
+    const { schedules, filter } = this.data;
+    let filteredList = schedules;
+    if (filter === 'pending') {
+      filteredList = schedules.filter(s => !s.completed);
+    } else if (filter === 'completed') {
+      filteredList = schedules.filter(s => s.completed);
+    }
+    this.setData({ filteredList });
+  },
+
+  /** 切换筛选 */
+  onFilter(e) {
+    const filter = e.currentTarget.dataset.filter;
+    this.setData({ filter });
+    this.applyFilter();
+  },
+
+  /** 点击日程卡片 — 跳转详情页 */
   onItemTap(e) {
-    const index = e.currentTarget.dataset.index;
-    const item = this.data.schedules[index];
-    wx.showModal({
-      title: item.title,
-      content: `日期：${item.date}\n\n${item.detail || '无详情'}`,
-      showCancel: false,
-      confirmText: '知道了'
+    const item = this.data.filteredList[e.currentTarget.dataset.index];
+    wx.navigateTo({
+      url: `/pages/detail/detail?id=${item.id}`
     });
   },
 
-  /** 删除日程 */
-  onDelete(e) {
-    const index = e.currentTarget.dataset.index;
-    const item = this.data.schedules[index];
-
-    wx.showModal({
-      title: '确认删除',
-      content: `删除日程「${item.title}」？`,
-      confirmText: '删除',
-      confirmColor: '#ee0a24',
-      success: (res) => {
-        if (res.confirm) {
-          const schedules = this.data.schedules;
-          schedules.splice(index, 1);
-          wx.setStorageSync('schedules', schedules);
-          this.setData({ schedules });
-          wx.showToast({ title: '已删除', icon: 'success' });
-        }
-      }
-    });
+  /** 切换完成状态 */
+  onToggleComplete(e) {
+    const id = e.currentTarget.dataset.id;
+    const schedules = this.data.schedules;
+    const item = schedules.find(s => s.id === id);
+    if (item) {
+      item.completed = !item.completed;
+      item.updatedAt = new Date().toISOString();
+      wx.setStorageSync('schedules', schedules);
+      this.loadSchedules();
+    }
   },
 
   /** 跳转到添加日程页 */

@@ -1,32 +1,22 @@
-# 版本快照记录
+# 版本记录
 
-## v0.1 — 2026-04-26 23:01
+## v0.2 — 2026-04-27
 
-**状态：✅ 测试通过**
+P0 补全版本，四个核心功能全部落地：
 
-### 包含页面
-- `pages/index/index` — 添加日程页（标题、日期、详情、保存）
-- `pages/list/list` — 日程列表页（查看、删除、跳转添加）
+- **P0-1 时间选择**：添加 `mode="time"` picker，选时间后自动弹出提醒开关
+- **P0-2 提醒推送（前端）**：保存日程时调用 `wx.requestSubscribeMessage()` 请求授权；计算 `remindAt` 提醒时间
+- **P0-3 编辑日程**：详情页点"编辑"进入编辑模式（复用添加页，传 id 参数）
+- **P0-4 已完成标记**：列表页勾选圈 + 详情页切换 + 筛选栏（全部/待办/已完成）
 
-### 功能
-- 添加日程：标题+日期必填，详情可选，保存到 localStorage
-- 日程列表：按日期倒序，点击查看详情，左下删除（二次确认）
-- 两页闭环：列表点"+"→添加→保存→返回列表自动刷新
+新增文件：
+- `app.js` / `app.json` / `app.wxss` — 小程序入口（含旧数据迁移逻辑）
+- `pages/detail/detail.*` — 日程详情页
+- `project.config.json` / `sitemap.json` — 项目配置
 
-### app.json 配置
-```json
-{
-  "pages": [
-    "pages/list/list",
-    "pages/index/index"
-  ]
-}
-```
+## v0.1 — 2026-04-27
 
-### 回滚方法
-把 `versions/v0.1/pages/` 下的文件覆盖回 `pages/` 即可：
-
-```
-versions/v0.1/pages/index/  →  pages/index/
-versions/v0.1/pages/list/   →  pages/list/
-```
+初始版本：
+- 添加日程（标题+日期+详情）
+- 日程列表（卡片布局、排序、删除）
+- 本地存储 `wx.setStorageSync`
