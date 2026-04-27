@@ -1,0 +1,150 @@
+/* 日程列表页样式 */
+
+.container {
+  padding: 32rpx;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 160rpx;
+}
+
+/* 顶部栏 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 32rpx;
+  padding: 0 8rpx;
+}
+
+.header-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.header-count {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 空状态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 240rpx;
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 32rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #ccc;
+}
+
+/* 日程列表 */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* 日程卡片 */
+.card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 20rpx;
+}
+
+.card-date {
+  font-size: 24rpx;
+  color: #07c160;
+  white-space: nowrap;
+  background-color: #e8f8ee;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.card-detail {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+/* 操作按钮区 */
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-delete {
+  font-size: 24rpx;
+  color: #ee0a24;
+  padding: 4rpx 16rpx;
+}
+
+.btn-delete:active {
+  opacity: 0.6;
+}
+
+/* 浮动添加按钮 */
+.fab {
+  position: fixed;
+  right: 48rpx;
+  bottom: 80rpx;
+  width: 108rpx;
+  height: 108rpx;
+  background-color: #07c160;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.4);
+}
+
+.fab:active {
+  opacity: 0.85;
+  transform: scale(0.95);
+}
+
+.fab-icon {
+  font-size: 52rpx;
+  color: #ffffff;
+  font-weight: 300;
+  line-height: 1;
+  margin-top: -4rpx;
+}

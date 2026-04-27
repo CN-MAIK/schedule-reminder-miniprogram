@@ -1,0 +1,35 @@
+<view class="container">
+  <!-- 顶部栏 -->
+  <view class="header">
+    <text class="header-title">我的日程</text>
+    <text class="header-count" wx:if="{{schedules.length}}">共 {{schedules.length}} 条</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!schedules.length}}">
+    <text class="empty-icon">📅</text>
+    <text class="empty-text">还没有日程</text>
+    <text class="empty-hint">点击右下角按钮添加</text>
+  </view>
+
+  <!-- 日程列表 -->
+  <view class="list" wx:if="{{schedules.length}}">
+    <view class="card" wx:for="{{schedules}}" wx:key="id" bindtap="onItemTap" data-index="{{index}}">
+      <view class="card-top">
+        <text class="card-title">{{item.title}}</text>
+        <text class="card-date">{{item.date}}</text>
+      </view>
+      <text class="card-detail" wx:if="{{item.detail}}">{{item.detail}}</text>
+      <view class="card-actions">
+        <view class="btn-delete" catchtap="onDelete" data-index="{{index}}">
+          <text>删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="fab" bindtap="onAdd">
+    <text class="fab-icon">+</text>
+  </view>
+</view>
