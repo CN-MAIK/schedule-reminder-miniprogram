@@ -154,17 +154,20 @@ Page({
         return this.data._cloudId;
       } else {
         // 新增：写入云数据库
-        const res = await collection.add({
-          data: {
-            ...schedule,
-            reminded: false,  // 是否已发送过提醒
-            _openid: '{openid}'  // 云函数自动填充用户openid
-          }
-        });
+        // 注意：_openid 由云数据库自动填充，不能手动设置
+        const data = { ...schedule, reminded: false };
+        delete data._cloudId;  // 本地用的字段，不需要写入云端
+        const res = await collection.add({ data });
+        console.log('云数据库写入成功, _id:', res._id);
         return res._id;
       }
     } catch (err) {
-      console.warn('云数据库同步失败:', err);
+      console.error('云数据库同步失败:', err);
+      wx.showModal({
+        title: '同步失败',
+        content: '提醒功能需要同步到云端，失败原因：' + (err.errMsg || err.message || '未知'),
+        showCancel: false
+      });
       return null;
     }
   },
