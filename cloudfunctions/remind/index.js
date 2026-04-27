@@ -12,14 +12,10 @@ const TEMPLATE_ID = '2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY';
 
 exports.main = async (event, context) => {
   const now = new Date();
-  // 安全上界：当前时间+2分钟（容错窗口，防止触发器执行时间偏移导致漏查）
   const windowEnd = new Date(now.getTime() + 2 * 60 * 1000);
-  // 安全下界：当前时间-30分钟（避免发送很久以前的过期提醒）
   const cutoff = new Date(now.getTime() - 30 * 60 * 1000);
 
   try {
-    // 查询条件：remindAt 在 [30分钟前, 2分钟后] 之间，且未发送过提醒
-    // 不再用1分钟窄窗口，大幅减少漏查概率
     const res = await db.collection('schedules')
       .where({
         remind: true,
@@ -35,19 +31,17 @@ exports.main = async (event, context) => {
 
     for (const item of res.data) {
       try {
-        // 发送订阅消息
         await cloud.openapi.subscribeMessage.send({
           touser: item._openid,
           templateId: TEMPLATE_ID,
-          page: `pages/detail/detail?id=${item.id}`,
+          page: `pages/list/list`,
           data: {
             thing2: { value: item.title.substring(0, 20) },
-            date4: { value: formatDateTime(item.date, item.time) }
+            date4: { value: formatDateForMsg(item.date, item.time) }
           },
-          miniprogramState: 'formal'
+          miniprogramState: 'developer'  // 开发阶段用developer，上线后改formal
         });
 
-        // 标记已提醒，防止重复发送
         await db.collection('schedules').doc(item._id).update({
           data: { reminded: true }
         });
@@ -71,8 +65,14 @@ exports.main = async (event, context) => {
   }
 };
 
-/** 格式化日期时间用于消息展示 */
-function formatDateTime(date, time) {
-  if (time) return `${date} ${time}`;
-  return date;
+/**
+ * 格式化日期时间为订阅消息要求的格式
+ * date 类型字段要求：2026年04月27日 21:00
+ */
+function formatDateForMsg(date, time) {
+  if (!date) return '';
+  const parts = date.split('-');
+  const cnDate = `${parts[0]}年${parts[1].padStart(2, '0')}月${parts[2].padStart(2, '0')}日`;
+  if (time) return `${cnDate} ${time}`;
+  return cnDate;
 }
