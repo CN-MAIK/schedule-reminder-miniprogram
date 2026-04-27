@@ -50,6 +50,7 @@
   "libVersion": "3.7.5",
   "appid": "wxf2097a44892239f3",
   "projectname": "schedule-reminder",
+  "miniprogramRoot": "src/",
   "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "simulatorPluginLibVersion": {},

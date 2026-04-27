@@ -1,0 +1,96 @@
+<view class="container">
+  <view class="header">
+    <text class="title">{{isEdit ? '编辑日程' : '添加日程'}}</text>
+  </view>
+
+  <view class="form">
+    <!-- 日程标题 -->
+    <view class="form-item">
+      <text class="label">日程标题</text>
+      <input
+        class="input"
+        placeholder="请输入日程标题"
+        value="{{title}}"
+        bindinput="onTitleInput"
+      />
+    </view>
+
+    <!-- 日期选择 -->
+    <view class="form-item">
+      <text class="label">日期</text>
+      <picker
+        mode="date"
+        value="{{date}}"
+        start="{{today}}"
+        bindchange="onDateChange"
+      >
+        <view class="picker-display">
+          <text class="{{date ? 'picker-text' : 'picker-placeholder'}}">
+            {{date || '请选择日期'}}
+          </text>
+          <text class="picker-arrow">▸</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 时间选择 -->
+    <view class="form-item">
+      <text class="label">时间</text>
+      <picker
+        mode="time"
+        value="{{time}}"
+        bindchange="onTimeChange"
+      >
+        <view class="picker-display">
+          <text class="{{time ? 'picker-text' : 'picker-placeholder'}}">
+            {{time || '请选择时间（可选）'}}
+          </text>
+          <text class="picker-arrow">▸</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 提醒开关 -->
+    <view class="form-item switch-item" wx:if="{{time}}">
+      <text class="label">开启提醒</text>
+      <switch
+        checked="{{remind}}"
+        bindchange="onRemindChange"
+        color="#07c160"
+      />
+    </view>
+
+    <!-- 提前提醒时间 -->
+    <view class="form-item" wx:if="{{remind && time}}">
+      <text class="label">提前提醒</text>
+      <picker
+        range="{{remindOptions}}"
+        value="{{remindIndex}}"
+        bindchange="onRemindTimeChange"
+      >
+        <view class="picker-display">
+          <text class="picker-text">{{remindOptions[remindIndex]}}</text>
+          <text class="picker-arrow">▸</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 日程详情 -->
+    <view class="form-item">
+      <text class="label">详情</text>
+      <textarea
+        class="textarea"
+        placeholder="请输入日程详情（可选）"
+        value="{{detail}}"
+        bindinput="onDetailInput"
+        maxlength="500"
+        auto-height
+      />
+    </view>
+  </view>
+
+  <!-- 保存按钮 -->
+  <button class="save-btn" bindtap="onSave" disabled="{{!canSave}}">
+    保存
+  </button>
+</view>

@@ -1,0 +1,47 @@
+<view class="container">
+  <!-- 顶部栏 -->
+  <view class="header">
+    <text class="header-title">我的日程</text>
+    <text class="header-count" wx:if="{{schedules.length}}">共 {{schedules.length}} 条</text>
+  </view>
+
+  <!-- 筛选标签 -->
+  <view class="filter-bar" wx:if="{{schedules.length}}">
+    <view class="filter-tab {{filter === 'all' ? 'active' : ''}}" bindtap="onFilter" data-filter="all">全部</view>
+    <view class="filter-tab {{filter === 'pending' ? 'active' : ''}}" bindtap="onFilter" data-filter="pending">待办</view>
+    <view class="filter-tab {{filter === 'completed' ? 'active' : ''}}" bindtap="onFilter" data-filter="completed">已完成</view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!filteredList.length}}">
+    <text class="empty-icon">📅</text>
+    <text class="empty-text">{{filter === 'all' ? '还没有日程' : '没有' + (filter === 'pending' ? '待办' : '已完成') + '日程'}}</text>
+    <text class="empty-hint" wx:if="{{filter === 'all'}}">点击右下角按钮添加</text>
+  </view>
+
+  <!-- 日程列表 -->
+  <view class="list" wx:if="{{filteredList.length}}">
+    <view class="card {{item.completed ? 'card-completed' : ''}}" wx:for="{{filteredList}}" wx:key="id" bindtap="onItemTap" data-index="{{index}}">
+      <view class="card-top">
+        <view class="card-title-row">
+          <!-- 完成勾选 -->
+          <view class="check-circle {{item.completed ? 'checked' : ''}}" catchtap="onToggleComplete" data-id="{{item.id}}">
+            <text wx:if="{{item.completed}}">✓</text>
+          </view>
+          <text class="card-title {{item.completed ? 'title-completed' : ''}}">{{item.title}}</text>
+        </view>
+        <view class="card-meta">
+          <text class="card-date">{{item.date}}</text>
+          <text class="card-time" wx:if="{{item.time}}">{{item.time}}</text>
+          <text class="card-remind" wx:if="{{item.remind}}">🔔</text>
+        </view>
+      </view>
+      <text class="card-detail" wx:if="{{item.detail}}">{{item.detail}}</text>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="fab" bindtap="onAdd">
+    <text class="fab-icon">+</text>
+  </view>
+</view>
