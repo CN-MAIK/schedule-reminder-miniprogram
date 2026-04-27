@@ -1,6 +1,17 @@
 // 小程序入口
 App({
   onLaunch() {
+    // 初始化云开发
+    if (wx.cloud) {
+      wx.cloud.init({
+        env: 'cloudbase-d2gpr441j7abd606c',
+        traceUser: true
+      });
+      console.log('云开发初始化成功');
+    } else {
+      console.warn('当前环境不支持云开发');
+    }
+
     // 检查本地存储版本，必要时做数据迁移
     const version = wx.getStorageSync('dataVersion') || 1;
     if (version < 2) {

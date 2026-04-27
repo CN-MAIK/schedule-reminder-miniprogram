@@ -12,7 +12,8 @@ Page({
     today: '',
     canSave: false,
     isEdit: false,    // 是否编辑模式
-    editId: null      // 编辑的日程ID
+    editId: null,     // 编辑的日程ID
+    _cloudId: null    // 云数据库记录ID（用于更新）
   },
 
   onLoad(options) {
@@ -33,7 +34,8 @@ Page({
           remind: item.remind || false,
           remindIndex: item.remindIndex || 0,
           isEdit: true,
-          editId: item.id
+          editId: item.id,
+          _cloudId: item._cloudId || null
         });
         this.checkCanSave();
       }
@@ -64,11 +66,9 @@ Page({
   onTimeChange(e) {
     const time = e.detail.value;
     this.setData({ time });
-    // 选了时间就默认开启提醒
     if (time && !this.data.remind) {
       this.setData({ remind: true });
     }
-    // 清除时间时关闭提醒
     if (!time) {
       this.setData({ remind: false });
     }
@@ -102,7 +102,6 @@ Page({
         resolve(false);
         return;
       }
-      // TODO: 替换为你在公众平台申请的模板ID
       const templateId = '2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY';
       wx.requestSubscribeMessage({
         tmplIds: [templateId],
@@ -121,14 +120,53 @@ Page({
   /** 计算提醒触发时间（返回 ISO 字符串） */
   calcRemindAt() {
     if (!this.data.remind || !this.data.time) return '';
-    const { date, time, remindIndex, remindOptions } = this.data;
-    // 解析目标时间
+    const { date, time, remindIndex } = this.data;
     const target = new Date(`${date}T${time}:00`);
-    // 提前量（分钟）
     const minutesMap = [0, 5, 10, 15, 30, 60];
     const ahead = minutesMap[remindIndex] || 0;
     const remindAt = new Date(target.getTime() - ahead * 60000);
     return remindAt.toISOString();
+  },
+
+  /** 同步日程到云数据库（用于提醒推送） */
+  async syncToCloud(schedule) {
+    try {
+      const db = wx.cloud.database();
+      const collection = db.collection('schedules');
+
+      if (this.data._cloudId) {
+        // 编辑模式：更新云数据库记录
+        await collection.doc(this.data._cloudId).update({
+          data: {
+            title: schedule.title,
+            date: schedule.date,
+            time: schedule.time,
+            detail: schedule.detail,
+            remind: schedule.remind,
+            remindIndex: schedule.remindIndex,
+            remindAt: schedule.remindAt,
+            subscribed: schedule.subscribed,
+            completed: schedule.completed,
+            reminded: false,  // 重新编辑后重置提醒状态
+            updatedAt: schedule.updatedAt
+          }
+        });
+        return this.data._cloudId;
+      } else {
+        // 新增：写入云数据库
+        const res = await collection.add({
+          data: {
+            ...schedule,
+            reminded: false,  // 是否已发送过提醒
+            _openid: '{openid}'  // 云函数自动填充用户openid
+          }
+        });
+        return res._id;
+      }
+    } catch (err) {
+      console.warn('云数据库同步失败:', err);
+      return null;
+    }
   },
 
   /** 保存日程 */
@@ -153,12 +191,36 @@ Page({
       updatedAt: new Date().toISOString()
     };
 
-    // 编辑模式不覆盖 createdAt
+    // 如果开启提醒，同步到云数据库
+    let cloudId = null;
+    if (schedule.remind) {
+      wx.showLoading({ title: '同步中...' });
+      cloudId = await this.syncToCloud(schedule);
+      wx.hideLoading();
+      if (cloudId) {
+        schedule._cloudId = cloudId;
+      } else {
+        // 云同步失败，仍可本地保存，但提醒不生效
+        wx.showToast({ title: '提醒同步失败', icon: 'none' });
+      }
+    } else if (this.data._cloudId) {
+      // 原来有提醒现在关掉了，删除云数据库记录
+      try {
+        const db = wx.cloud.database();
+        await db.collection('schedules').doc(this.data._cloudId).remove();
+      } catch (e) {
+        console.warn('删除云记录失败:', e);
+      }
+    }
+
+    // 保存到本地存储
     if (this.data.isEdit) {
       const schedules = wx.getStorageSync('schedules') || [];
       const idx = schedules.findIndex(s => s.id === this.data.editId);
       if (idx !== -1) {
         schedule.createdAt = schedules[idx].createdAt;
+        if (cloudId) schedule._cloudId = cloudId;
+        else if (schedules[idx]._cloudId) schedule._cloudId = schedules[idx]._cloudId;
         schedules[idx] = schedule;
         wx.setStorageSync('schedules', schedules);
       }
