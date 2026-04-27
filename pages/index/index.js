@@ -103,7 +103,7 @@ Page({
         return;
       }
       // TODO: 替换为你在公众平台申请的模板ID
-      const templateId = 'YOUR_TEMPLATE_ID';
+      const templateId = '2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY';
       wx.requestSubscribeMessage({
         tmplIds: [templateId],
         success(res) {
