@@ -61,16 +61,36 @@ Page({
     });
   },
 
-  /** 切换完成状态 */
-  onToggleComplete(e) {
+  /**
+   * 切换完成状态
+   * 同步更新本地存储 + 云数据库
+   */
+  async onToggleComplete(e) {
     const id = e.currentTarget.dataset.id;
     const schedules = this.data.schedules;
     const item = schedules.find(s => s.id === id);
-    if (item) {
-      item.completed = !item.completed;
-      item.updatedAt = new Date().toISOString();
-      wx.setStorageSync('schedules', schedules);
-      this.loadSchedules();
+    if (!item) return;
+
+    item.completed = !item.completed;
+    item.updatedAt = new Date().toISOString();
+    wx.setStorageSync('schedules', schedules);
+    this.loadSchedules();
+
+    // 同步到云数据库
+    if (item._cloudId) {
+      try {
+        const db = wx.cloud.database();
+        await db.collection('schedules').doc(item._cloudId).update({
+          data: {
+            completed: item.completed,
+            updatedAt: item.updatedAt
+          }
+        });
+        console.log(`[完成状态] 云端同步成功: ${item.title} → ${item.completed ? '已完成' : '待办'}`);
+      } catch (err) {
+        console.warn(`[完成状态] 云端同步失败:`, err);
+        // 不阻塞用户操作，静默失败
+      }
     }
   },
 

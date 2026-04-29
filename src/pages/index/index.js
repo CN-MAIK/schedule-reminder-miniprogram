@@ -95,7 +95,11 @@ Page({
     this.setData({ canSave });
   },
 
-  /** 请求订阅消息授权 */
+  /**
+   * 请求订阅消息授权
+   * 每次保存日程都请求一次，确保有授权配额
+   * 提示用户勾选"总是保持以上选择"避免反复授权
+   */
   requestSubscribe() {
     return new Promise((resolve) => {
       if (!this.data.remind || !this.data.time) {
@@ -107,10 +111,27 @@ Page({
         tmplIds: [templateId],
         success(res) {
           console.log('订阅授权结果:', res);
-          resolve(res[templateId] === 'accept');
+          const accepted = res[templateId] === 'accept';
+          // 如果用户拒绝或关闭，提示一下
+          if (!accepted) {
+            wx.showToast({
+              title: '未授权提醒，将收不到通知',
+              icon: 'none',
+              duration: 2500
+            });
+          }
+          resolve(accepted);
         },
         fail(err) {
           console.warn('订阅授权失败:', err);
+          // 用户拒绝授权弹窗（如勾选了"不再询问"），给出引导
+          wx.showModal({
+            title: '提醒授权',
+            content: '需要在弹窗中允许通知才能收到日程提醒。如未弹出，请在微信设置中开启通知权限。',
+            showCancel: true,
+            confirmText: '知道了',
+            cancelText: '忽略'
+          });
           resolve(false);
         }
       });
@@ -151,6 +172,7 @@ Page({
             updatedAt: schedule.updatedAt
           }
         });
+        console.log('云数据库更新成功, _id:', this.data._cloudId);
         return this.data._cloudId;
       } else {
         // 新增：写入云数据库
@@ -176,7 +198,7 @@ Page({
   async onSave() {
     if (!this.data.canSave) return;
 
-    // 如果开启提醒，先请求订阅授权
+    // 如果开启提醒，先请求订阅授权（每次保存都请求，确保配额）
     const subscribed = await this.requestSubscribe();
 
     const schedule = {
@@ -211,6 +233,7 @@ Page({
       try {
         const db = wx.cloud.database();
         await db.collection('schedules').doc(this.data._cloudId).remove();
+        console.log('已删除云记录:', this.data._cloudId);
       } catch (e) {
         console.warn('删除云记录失败:', e);
       }

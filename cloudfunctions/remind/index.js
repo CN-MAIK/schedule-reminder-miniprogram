@@ -20,6 +20,7 @@ exports.main = async (event, context) => {
       .where({
         remind: true,
         reminded: _.neq(true),
+        completed: _.neq(true),   // 过滤已完成的日程，不再提醒
         remindAt: _.gte(cutoff.toISOString()).and(_.lt(windowEnd.toISOString()))
       })
       .limit(100)

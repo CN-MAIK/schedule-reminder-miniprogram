@@ -29,15 +29,34 @@ Page({
     }
   },
 
-  /** 切换完成状态 */
-  onToggleComplete() {
+  /**
+   * 切换完成状态
+   * 同步更新本地存储 + 云数据库
+   */
+  async onToggleComplete() {
     const schedules = wx.getStorageSync('schedules') || [];
     const item = schedules.find(s => s.id === this.data.schedule.id);
-    if (item) {
-      item.completed = !item.completed;
-      item.updatedAt = new Date().toISOString();
-      wx.setStorageSync('schedules', schedules);
-      this.setData({ schedule: item });
+    if (!item) return;
+
+    item.completed = !item.completed;
+    item.updatedAt = new Date().toISOString();
+    wx.setStorageSync('schedules', schedules);
+    this.setData({ schedule: item });
+
+    // 同步到云数据库
+    if (item._cloudId) {
+      try {
+        const db = wx.cloud.database();
+        await db.collection('schedules').doc(item._cloudId).update({
+          data: {
+            completed: item.completed,
+            updatedAt: item.updatedAt
+          }
+        });
+        console.log(`[完成状态] 云端同步成功: ${item.title} → ${item.completed ? '已完成' : '待办'}`);
+      } catch (err) {
+        console.warn(`[完成状态] 云端同步失败:`, err);
+      }
     }
   },
 
@@ -48,17 +67,35 @@ Page({
     });
   },
 
-  /** 删除 */
+  /**
+   * 删除日程
+   * 同时删除本地存储 + 云数据库记录
+   */
   onDelete() {
     wx.showModal({
       title: '确认删除',
       content: `删除日程「${this.data.schedule.title}」？`,
       confirmText: '删除',
       confirmColor: '#ee0a24',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
+          const item = this.data.schedule;
+
+          // 删除云数据库记录
+          if (item._cloudId) {
+            try {
+              const db = wx.cloud.database();
+              await db.collection('schedules').doc(item._cloudId).remove();
+              console.log(`[删除] 云端记录已删除: ${item.title}`);
+            } catch (err) {
+              console.warn(`[删除] 云端记录删除失败:`, err);
+              // 本地仍可删除，不阻塞
+            }
+          }
+
+          // 删除本地存储
           let schedules = wx.getStorageSync('schedules') || [];
-          schedules = schedules.filter(s => s.id !== this.data.schedule.id);
+          schedules = schedules.filter(s => s.id !== item.id);
           wx.setStorageSync('schedules', schedules);
           wx.showToast({ title: '已删除', icon: 'success' });
           setTimeout(() => wx.navigateBack(), 1000);
