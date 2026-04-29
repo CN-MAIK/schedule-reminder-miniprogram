@@ -11,6 +11,20 @@ Page({
     this.loadSchedules();
   },
 
+  /** 下拉刷新 */
+  onPullDownRefresh() {
+    this.loadSchedules();
+    wx.stopPullDownRefresh();
+  },
+
+  /** 格式化日期为 YYYY-MM-DD */
+  formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
   /** 从本地存储加载日程 */
   loadSchedules() {
     let schedules = wx.getStorageSync('schedules') || [];
@@ -22,12 +36,27 @@ Page({
       remindIndex: item.remindIndex || 0,
       completed: item.completed || false
     }));
-    // 按日期+时间排序，最近的排前面
+    // 排序：未来最近 → 今天 → 已过期沉底
+    const now = new Date();
+    const todayStr = this.formatDate(now);
+    const nowTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
     schedules.sort((a, b) => {
+      const aIsFuture = a.date > todayStr || (a.date === todayStr && a.time && a.time > nowTime);
+      const bIsFuture = b.date > todayStr || (b.date === todayStr && b.time && b.time > nowTime);
+      const aIsPast = a.date < todayStr || (a.date === todayStr && a.time && a.time <= nowTime);
+      const bIsPast = b.date < todayStr || (b.date === todayStr && b.time && b.time <= nowTime);
+
+      // 已完成的沉最底
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      // 未过期的排前面，过期的沉底
+      if (aIsFuture && bIsPast) return -1;
+      if (aIsPast && bIsFuture) return 1;
+      // 同区间内：日期近的排前面
       const aKey = a.date + (a.time ? ' ' + a.time : '');
       const bKey = b.date + (b.time ? ' ' + b.time : '');
       if (aKey === bKey) return b.id - a.id;
-      return aKey > bKey ? -1 : 1;
+      return aKey < bKey ? -1 : 1;
     });
     wx.setStorageSync('schedules', schedules);
     this.setData({ schedules });

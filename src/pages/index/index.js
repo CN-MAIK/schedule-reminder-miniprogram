@@ -13,7 +13,9 @@ Page({
     canSave: false,
     isEdit: false,    // 是否编辑模式
     editId: null,     // 编辑的日程ID
-    _cloudId: null    // 云数据库记录ID（用于更新）
+    _cloudId: null,   // 云数据库记录ID（用于更新）
+    _completed: false, // 编辑前日程的完成状态（保存时恢复）
+    _createdAt: null   // 编辑前日程的创建时间（保存时恢复）
   },
 
   onLoad(options) {
@@ -35,7 +37,9 @@ Page({
           remindIndex: item.remindIndex || 0,
           isEdit: true,
           editId: item.id,
-          _cloudId: item._cloudId || null
+          _cloudId: item._cloudId || null,
+          _completed: item.completed || false,
+          _createdAt: item.createdAt || null
         });
         this.checkCanSave();
       }
@@ -210,9 +214,11 @@ Page({
       remindIndex: this.data.remindIndex,
       remindAt: this.calcRemindAt(),
       subscribed: subscribed,
-      completed: false,
+      // 【修复】编辑时保留原有的 completed 状态，不重置为 false
+      completed: this.data.isEdit ? this.data._completed : false,
       id: this.data.isEdit ? this.data.editId : Date.now(),
-      createdAt: this.data.isEdit ? undefined : new Date().toISOString(),
+      // 【修复】编辑时保留原有的 createdAt，不设为 undefined
+      createdAt: this.data.isEdit ? this.data._createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
@@ -244,7 +250,6 @@ Page({
       const schedules = wx.getStorageSync('schedules') || [];
       const idx = schedules.findIndex(s => s.id === this.data.editId);
       if (idx !== -1) {
-        schedule.createdAt = schedules[idx].createdAt;
         if (cloudId) schedule._cloudId = cloudId;
         else if (schedules[idx]._cloudId) schedule._cloudId = schedules[idx]._cloudId;
         schedules[idx] = schedule;

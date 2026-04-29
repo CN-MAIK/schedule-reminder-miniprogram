@@ -21,7 +21,7 @@
       <picker
         mode="date"
         value="{{date}}"
-        start="{{today}}"
+        start="{{isEdit ? '' : today}}"
         bindchange="onDateChange"
       >
         <view class="picker-display">
