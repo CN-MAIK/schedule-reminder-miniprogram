@@ -43,6 +43,10 @@ Page({
         });
         this.checkCanSave();
       }
+    } else if (options.date) {
+      // 从日历页传入日期，自动填充
+      this.setData({ date: options.date });
+      this.checkCanSave();
     }
   },
 

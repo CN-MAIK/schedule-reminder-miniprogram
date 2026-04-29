@@ -1,19 +1,18 @@
 /* 日程列表页样式 */
 
 .container {
-  padding: 32rpx;
+  padding: 0;
   min-height: 100vh;
   background-color: #f5f5f5;
   padding-bottom: 160rpx;
 }
 
-/* 顶部栏 */
+/* ========== 顶部栏 ========== */
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 24rpx;
-  padding: 0 8rpx;
+  align-items: center;
+  padding: 32rpx 32rpx 16rpx;
 }
 
 .header-title {
@@ -22,17 +21,150 @@
   color: #1a1a1a;
 }
 
-.header-count {
+.view-toggle {
   font-size: 26rpx;
+  color: #07c160;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  background-color: #e8f8ee;
+}
+
+/* ========== 万年历区域 ========== */
+.calendar-section {
+  margin: 0 24rpx 0;
+  background-color: #07c160;
+  border-radius: 20rpx;
+  padding: 24rpx 20rpx 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.25);
+}
+
+/* 月份切换 */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.arrow-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow {
+  font-size: 32rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.month-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* 星期标题 */
+.weekdays {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+
+.weekday {
+  flex: 1;
+  text-align: center;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 日期网格 */
+.days-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.day-cell {
+  width: calc(100% / 7);
+  height: 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.day-num {
+  font-size: 28rpx;
+  color: #ffffff;
+  line-height: 1;
+}
+
+/* 上/下月日期 */
+.day-cell.other-month .day-num {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* 今天 */
+.day-cell.today {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+}
+
+/* 选中日期 */
+.day-cell.selected {
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+.day-cell.selected .day-num {
+  color: #07c160;
+  font-weight: 700;
+}
+
+/* 有日程的小圆点 */
+.day-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: #ffd700;
+  margin-top: 6rpx;
+}
+
+.day-cell.selected .day-dot {
+  background-color: #07c160;
+}
+
+.day-cell.other-month .day-dot {
+  background-color: rgba(255, 215, 0, 0.3);
+}
+
+/* ========== 选中日期信息栏 ========== */
+.date-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.date-info-text {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.date-info-count {
+  font-size: 24rpx;
   color: #999;
 }
 
-/* 筛选标签栏 */
+/* ========== 筛选标签栏（非日历模式） ========== */
 .filter-bar {
   display: flex;
   gap: 16rpx;
-  margin-bottom: 28rpx;
-  padding: 0 8rpx;
+  margin: 16rpx 32rpx 20rpx;
 }
 
 .filter-tab {
@@ -48,13 +180,13 @@
   background-color: #07c160;
 }
 
-/* 空状态 */
+/* ========== 空状态 ========== */
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 240rpx;
+  padding-top: 200rpx;
 }
 
 .empty-icon {
@@ -73,11 +205,12 @@
   color: #ccc;
 }
 
-/* 日程列表 */
+/* ========== 日程列表 ========== */
 .list {
   display: flex;
   flex-direction: column;
   gap: 20rpx;
+  padding: 20rpx 32rpx 0;
 }
 
 /* 日程卡片 */
@@ -179,7 +312,7 @@
   padding-left: 56rpx;
 }
 
-/* 浮动添加按钮 */
+/* ========== 浮动添加按钮 ========== */
 .fab {
   position: fixed;
   right: 48rpx;

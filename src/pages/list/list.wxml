@@ -2,11 +2,54 @@
   <!-- 顶部栏 -->
   <view class="header">
     <text class="header-title">我的日程</text>
-    <text class="header-count" wx:if="{{schedules.length}}">共 {{schedules.length}} 条</text>
+    <view class="header-right" bindtap="onToggleView">
+      <text class="view-toggle">{{showCalendar ? '全部 ▾' : '日历 ▴'}}</text>
+    </view>
   </view>
 
-  <!-- 筛选标签 -->
-  <view class="filter-bar" wx:if="{{schedules.length}}">
+  <!-- 万年历区域 -->
+  <view class="calendar-section" wx:if="{{showCalendar}}">
+    <!-- 月份切换 -->
+    <view class="calendar-header">
+      <view class="arrow-btn" bindtap="onPrevMonth">
+        <text class="arrow">◂</text>
+      </view>
+      <text class="month-title">{{calendarTitle}}</text>
+      <view class="arrow-btn" bindtap="onNextMonth">
+        <text class="arrow">▸</text>
+      </view>
+    </view>
+
+    <!-- 星期标题 -->
+    <view class="weekdays">
+      <text class="weekday" wx:for="{{weekLabels}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <!-- 日期网格 -->
+    <view class="days-grid">
+      <view
+        class="day-cell {{item.isOtherMonth ? 'other-month' : ''}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
+        wx:for="{{calendarDays}}"
+        wx:key="key"
+        bindtap="onDayTap"
+        data-date="{{item.date}}"
+        data-is-other="{{item.isOtherMonth}}"
+      >
+        <text class="day-num">{{item.day}}</text>
+        <view class="day-dot" wx:if="{{item.hasSchedule}}"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 选中日期信息栏（日历模式下显示） -->
+  <view class="date-info-bar" wx:if="{{showCalendar}}">
+    <text class="date-info-text">{{selectedDateInfo}}</text>
+    <text class="date-info-count" wx:if="{{filteredList.length}}">{{filteredList.length}} 项日程</text>
+    <text class="date-info-count" wx:else>暂无日程</text>
+  </view>
+
+  <!-- 筛选标签（非日历模式下显示） -->
+  <view class="filter-bar" wx:if="{{!showCalendar && schedules.length}}">
     <view class="filter-tab {{filter === 'all' ? 'active' : ''}}" bindtap="onFilter" data-filter="all">全部</view>
     <view class="filter-tab {{filter === 'pending' ? 'active' : ''}}" bindtap="onFilter" data-filter="pending">待办</view>
     <view class="filter-tab {{filter === 'completed' ? 'active' : ''}}" bindtap="onFilter" data-filter="completed">已完成</view>
@@ -15,8 +58,8 @@
   <!-- 空状态 -->
   <view class="empty" wx:if="{{!filteredList.length}}">
     <text class="empty-icon">📅</text>
-    <text class="empty-text">{{filter === 'all' ? '还没有日程' : '没有' + (filter === 'pending' ? '待办' : '已完成') + '日程'}}</text>
-    <text class="empty-hint" wx:if="{{filter === 'all'}}">点击右下角按钮添加</text>
+    <text class="empty-text">{{showCalendar ? selectedDate + ' 暂无日程' : '还没有日程'}}</text>
+    <text class="empty-hint">点击右下角按钮添加</text>
   </view>
 
   <!-- 日程列表 -->
@@ -31,7 +74,7 @@
           <text class="card-title {{item.completed ? 'title-completed' : ''}}">{{item.title}}</text>
         </view>
         <view class="card-meta">
-          <text class="card-date">{{item.date}}</text>
+          <text class="card-date" wx:if="{{!showCalendar}}">{{item.date}}</text>
           <text class="card-time" wx:if="{{item.time}}">{{item.time}}</text>
           <text class="card-remind" wx:if="{{item.remind}}">🔔</text>
         </view>
