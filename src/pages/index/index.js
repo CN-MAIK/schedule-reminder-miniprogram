@@ -1,144 +1,147 @@
-// 添加/编辑日程页面逻辑
+// 添加/编辑日程页面逻辑（含重复日程）
 
 Page({
   data: {
-    title: '',
-    date: '',
-    time: '',         // 时间 HH:mm
-    detail: '',
-    remind: false,    // 是否开启提醒
-    remindIndex: 0,   // 提前提醒选项索引
+    title: '', date: '', time: '', detail: '',
+    remind: false, remindIndex: 0,
     remindOptions: ['准时', '5分钟前', '10分钟前', '15分钟前', '30分钟前', '1小时前'],
-    today: '',
-    canSave: false,
-    isEdit: false,    // 是否编辑模式
-    editId: null,     // 编辑的日程ID
-    _cloudId: null,   // 云数据库记录ID（用于更新）
-    _completed: false, // 编辑前日程的完成状态（保存时恢复）
-    _createdAt: null   // 编辑前日程的创建时间（保存时恢复）
+    today: '', canSave: false, isEdit: false, editId: null,
+    _cloudId: null, _completed: false, _createdAt: null,
+
+    // 重复
+    repeatType: 'none',
+    repeatStart: '',
+    repeatEnd: '',
+    repeatEndType: 'date',
+    repeatCount: 0,
+    repeatDays: [],
+    repeatLabel: '不重复',
+
+    // 弹窗
+    showRepeatPopup: false,
+    popupRepeatType: 'none',
+    popupEndDate: '',
+    popupEndType: 'date',
+    popupRepeatCount: 0,
+    weekdaySelected: [false, false, false, false, false, false, false]
   },
+
+  WEEKDAY_MAP: ['周日','周一','周二','周三','周四','周五','周六'],
+  REPEAT_LABELS: { none: '不重复', daily: '每天', weekly: '每周', monthly: '每月', yearly: '每年' },
 
   onLoad(options) {
     const now = new Date();
-    const today = this.formatDate(now);
+    const today = this.fmt(now);
     this.setData({ today });
 
-    // 如果传了 id，说明是编辑模式
     if (options.id) {
       const schedules = wx.getStorageSync('schedules') || [];
       const item = schedules.find(s => s.id === Number(options.id));
       if (item) {
+        const rt = item.repeatType || 'none';
         this.setData({
-          title: item.title,
-          date: item.date,
-          time: item.time || '',
-          detail: item.detail || '',
-          remind: item.remind || false,
-          remindIndex: item.remindIndex || 0,
-          isEdit: true,
-          editId: item.id,
-          _cloudId: item._cloudId || null,
-          _completed: item.completed || false,
-          _createdAt: item.createdAt || null
+          title: item.title, date: item.date, time: item.time || '',
+          detail: item.detail || '', remind: item.remind || false,
+          remindIndex: item.remindIndex || 0, isEdit: true, editId: item.id,
+          _cloudId: item._cloudId || null, _completed: item.completed || false,
+          _createdAt: item.createdAt || null,
+          repeatType: rt, repeatStart: item.repeatStart || item.date,
+          repeatEnd: item.repeatEnd || '', repeatEndType: item.repeatEndType || 'date',
+          repeatCount: item.repeatCount || 0,
+          repeatDays: item.repeatDays || [],
+          repeatLabel: rt === 'weekly' && item.repeatDays && item.repeatDays.length
+            ? '每周(' + item.repeatDays.map(d => this.WEEKDAY_MAP[d]).join('、') + ')'
+            : this.REPEAT_LABELS[rt] || '不重复'
         });
         this.checkCanSave();
       }
     } else if (options.date) {
-      // 从日历页传入日期，自动填充
-      this.setData({ date: options.date });
+      this.setData({ date: options.date, repeatStart: options.date });
       this.checkCanSave();
     }
   },
 
-  /** 格式化日期为 YYYY-MM-DD */
-  formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  },
+  fmt(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); },
 
-  /** 标题输入 */
-  onTitleInput(e) {
-    this.setData({ title: e.detail.value });
-    this.checkCanSave();
-  },
-
-  /** 日期选择 */
+  onTitleInput(e) { this.setData({ title: e.detail.value }); this.checkCanSave(); },
   onDateChange(e) {
-    this.setData({ date: e.detail.value });
+    const d = e.detail.value;
+    this.setData({ date: d, repeatStart: this.data.isEdit ? this.data.repeatStart : d });
     this.checkCanSave();
   },
-
-  /** 时间选择 */
   onTimeChange(e) {
-    const time = e.detail.value;
-    this.setData({ time });
-    if (time && !this.data.remind) {
-      this.setData({ remind: true });
+    const t = e.detail.value;
+    this.setData({ time: t });
+    if (t && !this.data.remind) this.setData({ remind: true });
+    if (!t) this.setData({ remind: false });
+  },
+  onRemindChange(e) { this.setData({ remind: e.detail.value }); },
+  onRemindTimeChange(e) { this.setData({ remindIndex: Number(e.detail.value) }); },
+  onDetailInput(e) { this.setData({ detail: e.detail.value }); },
+  checkCanSave() { this.setData({ canSave: this.data.title.trim() !== '' && this.data.date !== '' }); },
+
+  // ==================== 重复设置弹窗 ====================
+  onTapRepeat() {
+    const rts = this.data.repeatType;
+    let sel = [false, false, false, false, false, false, false];
+    if (rts === 'weekly' && this.data.repeatDays.length) {
+      this.data.repeatDays.forEach(d => { if (d >= 0 && d <= 6) sel[d] = true; });
     }
-    if (!time) {
-      this.setData({ remind: false });
+    this.setData({
+      showRepeatPopup: true,
+      popupRepeatType: this.data.repeatType,
+      popupEndDate: this.data.repeatEnd,
+      popupEndType: this.data.repeatEndType,
+      popupRepeatCount: this.data.repeatCount,
+      weekdaySelected: sel
+    });
+  },
+  onCloseRepeatPopup() { this.setData({ showRepeatPopup: false }); },
+  onSelRepeatType(e) { this.setData({ popupRepeatType: e.currentTarget.dataset.type }); },
+  onSelEndType(e) { this.setData({ popupEndType: e.currentTarget.dataset.type }); },
+  onEndDateChange(e) { this.setData({ popupEndDate: e.detail.value }); },
+  onRepeatCountInput(e) { this.setData({ popupRepeatCount: Number(e.detail.value) || 0 }); },
+  onToggleWeekday(e) {
+    const day = Number(e.currentTarget.dataset.day);
+    const sel = [...this.data.weekdaySelected];
+    sel[day] = !sel[day];
+    this.setData({ weekdaySelected: sel });
+  },
+
+  onConfirmRepeat() {
+    const { popupRepeatType, popupEndType, popupEndDate, popupRepeatCount, weekdaySelected } = this.data;
+    let label = this.REPEAT_LABELS[popupRepeatType] || '不重复';
+    let days = [];
+    if (popupRepeatType === 'weekly') {
+      days = weekdaySelected.map((v, i) => v ? i : -1).filter(v => v >= 0);
+      if (days.length) label = '每周(' + days.map(d => this.WEEKDAY_MAP[d]).join('、') + ')';
     }
+    this.setData({
+      repeatType: popupRepeatType,
+      repeatEndType: popupEndType,
+      repeatEnd: popupEndType === 'date' ? popupEndDate : '',
+      repeatCount: popupEndType === 'count' ? popupRepeatCount : 0,
+      repeatDays: days,
+      repeatLabel: label,
+      showRepeatPopup: false
+    });
   },
 
-  /** 提醒开关 */
-  onRemindChange(e) {
-    this.setData({ remind: e.detail.value });
-  },
-
-  /** 提前提醒时间选择 */
-  onRemindTimeChange(e) {
-    this.setData({ remindIndex: Number(e.detail.value) });
-  },
-
-  /** 详情输入 */
-  onDetailInput(e) {
-    this.setData({ detail: e.detail.value });
-  },
-
-  /** 检查是否可以保存 */
-  checkCanSave() {
-    const canSave = this.data.title.trim() !== '' && this.data.date !== '';
-    this.setData({ canSave });
-  },
-
-  /**
-   * 请求订阅消息授权
-   * 每次保存日程都请求一次，确保有授权配额
-   * 提示用户勾选"总是保持以上选择"避免反复授权
-   */
+  // ==================== 订阅授权 ====================
   requestSubscribe() {
     return new Promise((resolve) => {
-      if (!this.data.remind || !this.data.time) {
-        resolve(false);
-        return;
-      }
-      const templateId = '2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY';
+      if (!this.data.remind || !this.data.time) { resolve(false); return; }
       wx.requestSubscribeMessage({
-        tmplIds: [templateId],
+        tmplIds: ['2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY'],
         success(res) {
-          console.log('订阅授权结果:', res);
-          const accepted = res[templateId] === 'accept';
-          // 如果用户拒绝或关闭，提示一下
-          if (!accepted) {
-            wx.showToast({
-              title: '未授权提醒，将收不到通知',
-              icon: 'none',
-              duration: 2500
-            });
-          }
-          resolve(accepted);
+          const ok = res['2ntpB1-KftDWjdhkLA1tWUhHWjJc1Xfv1gleKt0X0nY'] === 'accept';
+          if (!ok) wx.showToast({ title: '未授权提醒，将收不到通知', icon: 'none', duration: 2500 });
+          resolve(ok);
         },
-        fail(err) {
-          console.warn('订阅授权失败:', err);
-          // 用户拒绝授权弹窗（如勾选了"不再询问"），给出引导
+        fail() {
           wx.showModal({
-            title: '提醒授权',
-            content: '需要在弹窗中允许通知才能收到日程提醒。如未弹出，请在微信设置中开启通知权限。',
-            showCancel: true,
-            confirmText: '知道了',
-            cancelText: '忽略'
+            title: '提醒授权', content: '需要在弹窗中允许通知才能收到提醒。如未弹出，请在微信设置中开启通知权限。',
+            showCancel: true, confirmText: '知道了', cancelText: '忽略'
           });
           resolve(false);
         }
@@ -146,67 +149,34 @@ Page({
     });
   },
 
-  /** 计算提醒触发时间（返回 ISO 字符串） */
   calcRemindAt() {
     if (!this.data.remind || !this.data.time) return '';
-    const { date, time, remindIndex } = this.data;
-    const target = new Date(`${date}T${time}:00`);
-    const minutesMap = [0, 5, 10, 15, 30, 60];
-    const ahead = minutesMap[remindIndex] || 0;
-    const remindAt = new Date(target.getTime() - ahead * 60000);
-    return remindAt.toISOString();
+    const target = new Date(`${this.data.date}T${this.data.time}:00`);
+    const min = [0,5,10,15,30,60][this.data.remindIndex] || 0;
+    return new Date(target.getTime() - min * 60000).toISOString();
   },
 
-  /** 同步日程到云数据库（用于提醒推送） */
+  // ==================== 云端同步 ====================
   async syncToCloud(schedule) {
     try {
       const db = wx.cloud.database();
-      const collection = db.collection('schedules');
-
-      if (this.data._cloudId) {
-        // 编辑模式：更新云数据库记录
-        await collection.doc(this.data._cloudId).update({
-          data: {
-            title: schedule.title,
-            date: schedule.date,
-            time: schedule.time,
-            detail: schedule.detail,
-            remind: schedule.remind,
-            remindIndex: schedule.remindIndex,
-            remindAt: schedule.remindAt,
-            subscribed: schedule.subscribed,
-            completed: schedule.completed,
-            reminded: false,  // 重新编辑后重置提醒状态
-            updatedAt: schedule.updatedAt
-          }
-        });
-        console.log('云数据库更新成功, _id:', this.data._cloudId);
-        return this.data._cloudId;
-      } else {
-        // 新增：写入云数据库
-        // 注意：_openid 由云数据库自动填充，不能手动设置
-        const data = { ...schedule, reminded: false };
-        delete data._cloudId;  // 本地用的字段，不需要写入云端
-        const res = await collection.add({ data });
-        console.log('云数据库写入成功, _id:', res._id);
-        return res._id;
-      }
+      const col = db.collection('schedules');
+      const data = { ...schedule };
+      if (data._cloudId) { const cid = data._cloudId; delete data._cloudId; delete data.completedDates; delete data.excludeDates; await col.doc(cid).update({ data }); return cid; }
+      if (this.data._cloudId) { delete data._cloudId; delete data.completedDates; delete data.excludeDates; await col.doc(this.data._cloudId).update({ data }); return this.data._cloudId; }
+      delete data._cloudId;
+      const res = await col.add({ data });
+      return res._id;
     } catch (err) {
-      console.error('云数据库同步失败:', err);
-      wx.showModal({
-        title: '同步失败',
-        content: '提醒功能需要同步到云端，失败原因：' + (err.errMsg || err.message || '未知'),
-        showCancel: false
-      });
+      console.error('云端同步失败:', err);
+      wx.showModal({ title: '同步失败', content: '失败原因：' + (err.errMsg || err.message || '未知'), showCancel: false });
       return null;
     }
   },
 
-  /** 保存日程 */
+  // ==================== 保存 ====================
   async onSave() {
     if (!this.data.canSave) return;
-
-    // 如果开启提醒，先请求订阅授权（每次保存都请求，确保配额）
     const subscribed = await this.requestSubscribe();
 
     const schedule = {
@@ -217,62 +187,51 @@ Page({
       remind: this.data.remind && this.data.time !== '',
       remindIndex: this.data.remindIndex,
       remindAt: this.calcRemindAt(),
-      subscribed: subscribed,
-      // 【修复】编辑时保留原有的 completed 状态，不重置为 false
+      subscribed,
       completed: this.data.isEdit ? this.data._completed : false,
       id: this.data.isEdit ? this.data.editId : Date.now(),
-      // 【修复】编辑时保留原有的 createdAt，不设为 undefined
       createdAt: this.data.isEdit ? this.data._createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // 重复字段
+      repeatType: this.data.repeatType,
+      repeatStart: this.data.repeatStart || this.data.date,
+      repeatEnd: this.data.repeatType === 'none' ? '' : this.data.repeatEnd,
+      repeatEndType: this.data.repeatType === 'none' ? 'date' : this.data.repeatEndType,
+      repeatCount: this.data.repeatType === 'none' ? 0 : this.data.repeatCount,
+      repeatDays: this.data.repeatDays,
+      completedDates: [],
+      excludeDates: []
     };
 
-    // 如果开启提醒，同步到云数据库
+    // 编辑时保留已有的 completedDates
+    if (this.data.isEdit) {
+      const old = (wx.getStorageSync('schedules') || []).find(s => s.id === this.data.editId);
+      if (old) schedule.completedDates = old.completedDates || [];
+    }
+
+    // 云端同步
     let cloudId = null;
     if (schedule.remind) {
       wx.showLoading({ title: '同步中...' });
       cloudId = await this.syncToCloud(schedule);
       wx.hideLoading();
-      if (cloudId) {
-        schedule._cloudId = cloudId;
-      } else {
-        // 云同步失败，仍可本地保存，但提醒不生效
-        wx.showToast({ title: '提醒同步失败', icon: 'none' });
-      }
+      if (cloudId) schedule._cloudId = cloudId;
     } else if (this.data._cloudId) {
-      // 原来有提醒现在关掉了，删除云数据库记录
-      try {
-        const db = wx.cloud.database();
-        await db.collection('schedules').doc(this.data._cloudId).remove();
-        console.log('已删除云记录:', this.data._cloudId);
-      } catch (e) {
-        console.warn('删除云记录失败:', e);
-      }
+      try { const db = wx.cloud.database(); await db.collection('schedules').doc(this.data._cloudId).remove(); } catch(e) {}
     }
 
-    // 保存到本地存储
+    // 本地保存
+    let list = wx.getStorageSync('schedules') || [];
     if (this.data.isEdit) {
-      const schedules = wx.getStorageSync('schedules') || [];
-      const idx = schedules.findIndex(s => s.id === this.data.editId);
-      if (idx !== -1) {
-        if (cloudId) schedule._cloudId = cloudId;
-        else if (schedules[idx]._cloudId) schedule._cloudId = schedules[idx]._cloudId;
-        schedules[idx] = schedule;
-        wx.setStorageSync('schedules', schedules);
+      const i = list.findIndex(s => s.id === this.data.editId);
+      if (i >= 0) {
+        if (!cloudId && list[i]._cloudId) schedule._cloudId = list[i]._cloudId;
+        list[i] = schedule;
       }
-    } else {
-      const schedules = wx.getStorageSync('schedules') || [];
-      schedules.push(schedule);
-      wx.setStorageSync('schedules', schedules);
-    }
+    } else { list.push(schedule); }
+    wx.setStorageSync('schedules', list);
 
-    wx.showToast({
-      title: '保存成功',
-      icon: 'success',
-      duration: 1500
-    });
-
-    setTimeout(() => {
-      wx.navigateBack();
-    }, 1500);
+    wx.showToast({ title: '保存成功', icon: 'success', duration: 1500 });
+    setTimeout(() => wx.navigateBack(), 1500);
   }
 });

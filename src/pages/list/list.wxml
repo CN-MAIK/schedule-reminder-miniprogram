@@ -64,19 +64,20 @@
 
   <!-- 日程列表 -->
   <view class="list" wx:if="{{filteredList.length}}">
-    <view class="card {{item.completed ? 'card-completed' : ''}}" wx:for="{{filteredList}}" wx:key="id" bindtap="onItemTap" data-index="{{index}}">
+    <view class="card {{item.completed ? 'card-completed' : ''}}" wx:for="{{filteredList}}" wx:key="id" bindtap="onItemTap" data-id="{{item.id}}" data-date="{{item._instanceDate}}">
       <view class="card-top">
         <view class="card-title-row">
           <!-- 完成勾选 -->
-          <view class="check-circle {{item.completed ? 'checked' : ''}}" catchtap="onToggleComplete" data-id="{{item.id}}">
-            <text wx:if="{{item.completed}}">✓</text>
+          <view class="check-circle {{item._instanceCompleted ? 'checked' : ''}}" catchtap="onToggleComplete" data-id="{{item.id}}" data-date="{{item._instanceDate}}">
+            <text wx:if="{{item._instanceCompleted}}">✓</text>
           </view>
-          <text class="card-title {{item.completed ? 'title-completed' : ''}}">{{item.title}}</text>
+          <text class="card-title {{item._instanceCompleted ? 'title-completed' : ''}}">{{item.title}}</text>
         </view>
         <view class="card-meta">
           <text class="card-date" wx:if="{{!showCalendar}}">{{item.date}}</text>
           <text class="card-time" wx:if="{{item.time}}">{{item.time}}</text>
           <text class="card-remind" wx:if="{{item.remind}}">🔔</text>
+          <text class="card-repeat" wx:if="{{item.repeatType && item.repeatType !== 'none'}}">🔁</text>
         </view>
       </view>
       <text class="card-detail" wx:if="{{item.detail}}">{{item.detail}}</text>

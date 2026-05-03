@@ -1,9 +1,9 @@
-/* 日程列表页样式 */
+/* 日程列表页样式 — 清新简约风格 */
 
 .container {
   padding: 0;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
   padding-bottom: 160rpx;
 }
 
@@ -29,13 +29,13 @@
   background-color: #e8f8ee;
 }
 
-/* ========== 万年历区域 ========== */
+/* ========== 万年历区域 — 白底清新 ========== */
 .calendar-section {
   margin: 0 24rpx 0;
-  background-color: #07c160;
+  background-color: #ffffff;
   border-radius: 20rpx;
-  padding: 24rpx 20rpx 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.25);
+  padding: 28rpx 20rpx 24rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 /* 月份切换 */
@@ -55,14 +55,14 @@
 }
 
 .arrow {
-  font-size: 32rpx;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 28rpx;
+  color: #999;
 }
 
 .month-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 /* 星期标题 */
@@ -75,7 +75,7 @@
   flex: 1;
   text-align: center;
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.6);
+  color: #bbb;
 }
 
 /* 日期网格 */
@@ -92,33 +92,37 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  border-radius: 50%;
 }
 
 .day-num {
   font-size: 28rpx;
-  color: #ffffff;
+  color: #333;
   line-height: 1;
 }
 
 /* 上/下月日期 */
 .day-cell.other-month .day-num {
-  color: rgba(255, 255, 255, 0.3);
+  color: #d9d9d9;
 }
 
 /* 今天 */
 .day-cell.today {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
+  background-color: #e8f8ee;
+}
+
+.day-cell.today .day-num {
+  color: #07c160;
+  font-weight: 600;
 }
 
 /* 选中日期 */
 .day-cell.selected {
-  background-color: #ffffff;
-  border-radius: 50%;
+  background-color: #07c160;
 }
 
 .day-cell.selected .day-num {
-  color: #07c160;
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -127,16 +131,16 @@
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background-color: #ffd700;
+  background-color: #07c160;
   margin-top: 6rpx;
 }
 
 .day-cell.selected .day-dot {
-  background-color: #07c160;
+  background-color: #ffffff;
 }
 
 .day-cell.other-month .day-dot {
-  background-color: rgba(255, 215, 0, 0.3);
+  background-color: #ccc;
 }
 
 /* ========== 选中日期信息栏 ========== */
@@ -218,7 +222,7 @@
   background-color: #ffffff;
   border-radius: 16rpx;
   padding: 28rpx 32rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
 .card-completed {
@@ -244,7 +248,7 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  border: 3rpx solid #ccc;
+  border: 3rpx solid #d9d9d9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -301,6 +305,14 @@
   font-size: 28rpx;
 }
 
+.card-repeat {
+  font-size: 24rpx;
+  color: #ed6a0c;
+  background-color: #fff3e8;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
 .card-detail {
   font-size: 26rpx;
   color: #666;
@@ -324,7 +336,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.4);
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.35);
 }
 
 .fab:active {

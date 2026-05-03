@@ -7,27 +7,15 @@
     <!-- 日程标题 -->
     <view class="form-item">
       <text class="label">日程标题</text>
-      <input
-        class="input"
-        placeholder="请输入日程标题"
-        value="{{title}}"
-        bindinput="onTitleInput"
-      />
+      <input class="input" placeholder="请输入日程标题" value="{{title}}" bindinput="onTitleInput" />
     </view>
 
     <!-- 日期选择 -->
     <view class="form-item">
       <text class="label">日期</text>
-      <picker
-        mode="date"
-        value="{{date}}"
-        start="{{isEdit ? '' : today}}"
-        bindchange="onDateChange"
-      >
+      <picker mode="date" value="{{date}}" start="{{isEdit ? '' : today}}" bindchange="onDateChange">
         <view class="picker-display">
-          <text class="{{date ? 'picker-text' : 'picker-placeholder'}}">
-            {{date || '请选择日期'}}
-          </text>
+          <text class="{{date ? 'picker-text' : 'picker-placeholder'}}">{{date || '请选择日期'}}</text>
           <text class="picker-arrow">▸</text>
         </view>
       </picker>
@@ -36,15 +24,9 @@
     <!-- 时间选择 -->
     <view class="form-item">
       <text class="label">时间</text>
-      <picker
-        mode="time"
-        value="{{time}}"
-        bindchange="onTimeChange"
-      >
+      <picker mode="time" value="{{time}}" bindchange="onTimeChange">
         <view class="picker-display">
-          <text class="{{time ? 'picker-text' : 'picker-placeholder'}}">
-            {{time || '请选择时间（可选）'}}
-          </text>
+          <text class="{{time ? 'picker-text' : 'picker-placeholder'}}">{{time || '请选择时间（可选）'}}</text>
           <text class="picker-arrow">▸</text>
         </view>
       </picker>
@@ -53,21 +35,13 @@
     <!-- 提醒开关 -->
     <view class="form-item switch-item" wx:if="{{time}}">
       <text class="label">开启提醒</text>
-      <switch
-        checked="{{remind}}"
-        bindchange="onRemindChange"
-        color="#07c160"
-      />
+      <switch checked="{{remind}}" bindchange="onRemindChange" color="#07c160" />
     </view>
 
     <!-- 提前提醒时间 -->
     <view class="form-item" wx:if="{{remind && time}}">
       <text class="label">提前提醒</text>
-      <picker
-        range="{{remindOptions}}"
-        value="{{remindIndex}}"
-        bindchange="onRemindTimeChange"
-      >
+      <picker range="{{remindOptions}}" value="{{remindIndex}}" bindchange="onRemindTimeChange">
         <view class="picker-display">
           <text class="picker-text">{{remindOptions[remindIndex]}}</text>
           <text class="picker-arrow">▸</text>
@@ -78,19 +52,91 @@
     <!-- 日程详情 -->
     <view class="form-item">
       <text class="label">详情</text>
-      <textarea
-        class="textarea"
-        placeholder="请输入日程详情（可选）"
-        value="{{detail}}"
-        bindinput="onDetailInput"
-        maxlength="500"
-        auto-height
-      />
+      <textarea class="textarea" placeholder="请输入日程详情（可选）" value="{{detail}}" bindinput="onDetailInput" maxlength="500" auto-height />
+    </view>
+
+    <!-- ========== 重复日程 ========== -->
+    <view class="form-item" bindtap="onTapRepeat">
+      <text class="label">重复</text>
+      <view class="picker-display">
+        <text class="{{repeatLabel !== '不重复' ? 'picker-text' : 'picker-placeholder'}}">{{repeatLabel}}</text>
+        <text class="picker-arrow">▸</text>
+      </view>
     </view>
   </view>
 
   <!-- 保存按钮 -->
-  <button class="save-btn" bindtap="onSave" disabled="{{!canSave}}">
-    保存
-  </button>
+  <button class="save-btn" bindtap="onSave" disabled="{{!canSave}}">保存</button>
+
+  <!-- ==================== 重复设置弹窗 ==================== -->
+  <view class="popup-mask" wx:if="{{showRepeatPopup}}" bindtap="onCloseRepeatPopup"></view>
+  <view class="popup-panel {{showRepeatPopup ? 'show' : ''}}">
+    <view class="popup-header">
+      <text class="popup-title">重复设置</text>
+      <text class="popup-close" bindtap="onCloseRepeatPopup">✕</text>
+    </view>
+
+    <scroll-view class="popup-body" scroll-y>
+      <!-- 频率选择 -->
+      <view class="repeat-option-group">
+        <text class="repeat-group-title">重复频率</text>
+        <view class="repeat-options">
+          <view class="repeat-opt {{popupRepeatType === 'none' ? 'active' : ''}}" bindtap="onSelRepeatType" data-type="none">不重复</view>
+          <view class="repeat-opt {{popupRepeatType === 'daily' ? 'active' : ''}}" bindtap="onSelRepeatType" data-type="daily">每天</view>
+          <view class="repeat-opt {{popupRepeatType === 'weekly' ? 'active' : ''}}" bindtap="onSelRepeatType" data-type="weekly">每周</view>
+          <view class="repeat-opt {{popupRepeatType === 'monthly' ? 'active' : ''}}" bindtap="onSelRepeatType" data-type="monthly">每月</view>
+          <view class="repeat-opt {{popupRepeatType === 'yearly' ? 'active' : ''}}" bindtap="onSelRepeatType" data-type="yearly">每年</view>
+        </view>
+      </view>
+
+      <!-- 每周重复：指定星期几 -->
+      <view wx:if="{{popupRepeatType === 'weekly'}}" class="repeat-option-group">
+        <text class="repeat-group-title">重复日</text>
+        <view class="weekday-picker">
+          <view class="wk-chip {{weekdaySelected[0] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="0">周日</view>
+          <view class="wk-chip {{weekdaySelected[1] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="1">周一</view>
+          <view class="wk-chip {{weekdaySelected[2] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="2">周二</view>
+          <view class="wk-chip {{weekdaySelected[3] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="3">周三</view>
+          <view class="wk-chip {{weekdaySelected[4] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="4">周四</view>
+          <view class="wk-chip {{weekdaySelected[5] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="5">周五</view>
+          <view class="wk-chip {{weekdaySelected[6] ? 'on' : ''}}" bindtap="onToggleWeekday" data-day="6">周六</view>
+        </view>
+      </view>
+
+      <!-- 截止方式 -->
+      <view wx:if="{{popupRepeatType !== 'none'}}" class="repeat-option-group">
+        <text class="repeat-group-title">截止方式</text>
+        <view class="switch-bar">
+          <view class="switch-opt {{popupEndType === 'date' ? 'active' : ''}}" bindtap="onSelEndType" data-type="date">设定日期</view>
+          <view class="switch-opt {{popupEndType === 'count' ? 'active' : ''}}" bindtap="onSelEndType" data-type="count">重复次数</view>
+        </view>
+      </view>
+
+      <!-- 日期模式 -->
+      <view wx:if="{{popupRepeatType !== 'none' && popupEndType === 'date'}}" class="repeat-option-group">
+        <text class="repeat-group-title">重复截止</text>
+        <picker mode="date" value="{{popupEndDate}}" start="{{date}}" bindchange="onEndDateChange">
+          <view class="picker-display">
+            <text class="picker-text">{{popupEndDate || '请选择截止日期'}}</text>
+            <text class="picker-arrow">▸</text>
+          </view>
+        </picker>
+        <text class="hint">不设则永久重复</text>
+      </view>
+
+      <!-- 次数模式 -->
+      <view wx:if="{{popupRepeatType !== 'none' && popupEndType === 'count'}}" class="repeat-option-group">
+        <text class="repeat-group-title">重复次数</text>
+        <view class="count-input-row">
+          <input class="count-input" type="number" value="{{popupRepeatCount}}" bindinput="onRepeatCountInput" maxlength="3" placeholder="次数" />
+          <text class="count-unit">次</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="popup-footer">
+      <button class="popup-btn cancel" bindtap="onCloseRepeatPopup">取消</button>
+      <button class="popup-btn confirm" bindtap="onConfirmRepeat">确定</button>
+    </view>
+  </view>
 </view>

@@ -1,0 +1,100 @@
+<view class="container">
+  <!-- 模板选择页 -->
+  <block wx:if="{{showTemplate}}">
+    <view class="template-header">
+      <text class="tmpl-title">选择排班模式</text>
+      <text class="tmpl-desc">选择后可设置起始日期和微调</text>
+    </view>
+
+    <view class="presets-list">
+      <view
+        class="preset-card {{selectedPresetIdx === index ? 'card-active' : ''}}"
+        wx:for="{{presets}}" wx:key="name"
+        bindtap="onSelectPreset" data-idx="{{index}}"
+      >
+        <view class="preset-top">
+          <view class="preset-check {{selectedPresetIdx === index ? 'chk-on' : ''}}">
+            <text wx:if="{{selectedPresetIdx === index}}">✓</text>
+          </view>
+          <text class="preset-name">{{item.name}}</text>
+        </view>
+        <text class="preset-desc">{{item.desc}}</text>
+        <view class="preset-seq">
+          <text class="preset-seq-label">序列：</text>
+          <text class="preset-seq-text">{{item.seqLen}}天周期</text>
+        </view>
+        <view class="preset-shifts">
+          <text class="preset-shift" wx:for="{{item.shiftsArr}}" wx:key="name" wx:for-item="s" style="background:{{s.color}};color:#fff">{{s.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="tmpl-bottom">
+      <button class="save-btn" bindtap="onConfirmPreset" wx:if="{{selectedPresetIdx >= 0}}">使用此模板</button>
+      <view class="custom-link" bindtap="onGoCustom">或自定义规则 ›</view>
+    </view>
+  </block>
+
+  <!-- 编辑面板 -->
+  <block wx:else>
+    <view class="edit-header">
+      <view class="back-btn" bindtap="onBackToTemplates"><text class="back-arrow">‹</text></view>
+      <text class="edit-title">{{editMode === 'preset' ? editing.name : '自定义排班'}}</text>
+      <view></view>
+    </view>
+
+    <!-- 日期 -->
+    <view class="form-group">
+      <text class="form-label">起始日期</text>
+      <picker mode="date" value="{{startDateDisplay}}" bindchange="onStartDateChange">
+        <view class="form-picker">{{startDateDisplay || '点击选择'}}</view>
+      </picker>
+    </view>
+    <view class="form-group">
+      <text class="form-label">截止日期（可选）</text>
+      <picker mode="date" value="{{endDateDisplay}}" bindchange="onEndDateChange">
+        <view class="form-picker">{{endDateDisplay || '不限制'}}</view>
+      </picker>
+    </view>
+
+    <!-- 序列编辑 -->
+    <view class="form-group">
+      <text class="form-label">班次序列（逗号分隔）</text>
+      <input class="seq-input" value="{{editing.sequence}}" bindinput="onSequenceInput" placeholder="白班,白班,中班,中班,夜班,夜班,休息,休息"></input>
+      <text class="form-hint">当前序列长度：{{editing.sequence ? editing.sequence.length : 0}} 天</text>
+    </view>
+
+    <!-- 班次颜色与时间 -->
+    <view class="form-group">
+      <text class="form-label">班次明细</text>
+      <view class="shift-row" wx:for="{{shiftKeys}}" wx:key="*this" wx:for-item="k">
+        <view class="shift-name-col">
+          <text class="shift-name">{{k}}</text>
+          <text class="shift-del" wx:if="{{editMode === 'custom'}}" bindtap="onRemoveShift" data-shift="{{k}}">✕</text>
+        </view>
+        <view class="shift-color-col">
+          <input class="color-input" value="{{editing.shifts[k].color}}" bindinput="onShiftColorChange" data-shift="{{k}}" placeholder="#FF9500"></input>
+          <view class="color-preview" style="background:{{editing.shifts[k].color}}"></view>
+        </view>
+        <view class="shift-time-col" wx:if="{{editing.shifts[k].startTime}}">
+          <input class="time-input" value="{{editing.shifts[k].startTime}}" bindinput="onShiftTimeChange" data-shift="{{k}}" data-field="startTime" placeholder="08:00"></input>
+          <text class="time-sep">-</text>
+          <input class="time-input" value="{{editing.shifts[k].endTime}}" bindinput="onShiftTimeChange" data-shift="{{k}}" data-field="endTime" placeholder="16:00"></input>
+        </view>
+      </view>
+      <view class="add-shift-row" wx:if="{{editMode === 'custom'}}" bindtap="onAddShift">
+        <text class="add-shift-text">+ 添加班次</text>
+      </view>
+    </view>
+
+    <!-- 校验信息 -->
+    <text class="check-msg" wx:if="{{checkMsg}}">{{checkMsg}}</text>
+
+    <!-- 操作按钮 -->
+    <view class="edit-actions">
+      <button class="save-btn" bindtap="onSave">保存</button>
+      <text class="delete-link" wx:if="{{hasRule}}" bindtap="onDelete">删除此规则</text>
+    </view>
+  </block>
+</view>
+

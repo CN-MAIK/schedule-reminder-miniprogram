@@ -1,0 +1,73 @@
+<view class="container">
+  <!-- 未设置规则：引导页 -->
+  <block wx:if="{{!hasRule}}">
+    <view class="empty-guide">
+      <view class="guide-icon">📋</view>
+      <text class="guide-title">还没设置排班</text>
+      <text class="guide-desc">选择排班模式，自动推算每天班次</text>
+      <button class="guide-btn" bindtap="onSetup">开始设置</button>
+    </view>
+  </block>
+
+  <!-- 已设置规则 -->
+  <block wx:else>
+    <!-- 今日班次大卡片 -->
+    <view class="today-card">
+      <view class="today-bg" style="background: {{todayShift ? todayShift.color : '#ccc'}};"></view>
+      <view class="today-content">
+        <text class="today-label">今天 · {{today}}</text>
+        <text class="today-shift-name">{{todayShift ? todayShift.name : '—'}}</text>
+        <text class="today-shift-time" wx:if="{{todayShift && todayShift.startTime}}">{{todayShift.startTime}} - {{todayShift.endTime}}</text>
+      </view>
+    </view>
+
+    <!-- 倒计时 -->
+    <view class="countdown" wx:if="{{countdown}}">
+      <text wx:if="{{countdown.days === 0}}" class="countdown-text">⏰ 正在上班，加油！</text>
+      <text wx:elif="{{countdown.days === 1}}" class="countdown-text">📅 明天（{{countdown.date}}）是 {{countdown.shift.name}}</text>
+      <text wx:else class="countdown-text">🗓 距下次上班还有 <text class="countdown-num">{{countdown.days}}</text> 天（{{countdown.date}} {{countdown.shift.name}}）</text>
+    </view>
+
+    <!-- 近期排班横向滑动 -->
+    <view class="upcoming-wrap">
+      <text class="section-title">近 7 天</text>
+      <scroll-view class="upcoming-scroll" scroll-x>
+        <view class="upcoming-day {{item.isToday ? 'day-today' : ''}}" wx:for="{{upcoming}}" wx:key="date">
+          <text class="ud-weekday">{{item.weekday}}</text>
+          <text class="ud-date">{{item.day}}</text>
+          <view class="ud-shift" wx:if="{{item.shift}}" style="background:{{item.shift.color}}">
+            <text>{{item.shift.name}}</text>
+          </view>
+          <view class="ud-shift ud-none" wx:else><text>—</text></view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 本月统计 -->
+    <view class="stats-section" wx:if="{{monthStats}}">
+      <text class="section-title">{{currentMonthLabel}}统计</text>
+      <view class="stats-bar">
+        <view class="stat-item" wx:for="{{monthStats.statsArr}}" wx:key="name">
+          <view class="stat-dot" style="background:{{item.color}}"></view>
+          <text class="stat-name">{{item.name}}</text>
+          <text class="stat-count">{{item.count}}天</text>
+        </view>
+      </view>
+      <text class="stats-total">合计 {{monthStats.total}} 天已有排班</text>
+    </view>
+
+    <!-- 快捷入口 -->
+    <view class="quick-actions">
+      <view class="quick-btn" bindtap="onGoCalendar">
+        <text class="quick-icon">📅</text>
+        <text class="quick-label">排班日历</text>
+        <text class="quick-arrow">›</text>
+      </view>
+      <view class="quick-btn" bindtap="onGoSettings">
+        <text class="quick-icon">⚙️</text>
+        <text class="quick-label">排班设置</text>
+        <text class="quick-arrow">›</text>
+      </view>
+    </view>
+  </block>
+</view>

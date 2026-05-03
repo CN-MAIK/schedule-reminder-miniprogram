@@ -1,0 +1,68 @@
+<view class="container">
+  <!-- 未设置 -->
+  <block wx:if="{{!hasRule}}">
+    <view class="empty-guide">
+      <text class="guide-icon">📋</text>
+      <text class="guide-title">还没设置排班</text>
+      <button class="guide-btn" bindtap="onGoHome">去首页设置</button>
+    </view>
+  </block>
+
+  <block wx:else>
+    <!-- 月份切换 -->
+    <view class="calendar-header">
+      <view class="arrow-btn {{canGoPrev ? '' : 'arrow-disabled'}}" bindtap="onPrevMonth"><text class="arrow">◂</text></view>
+      <text class="month-title">{{calendarTitle}}</text>
+      <view class="arrow-btn {{canGoNext ? '' : 'arrow-disabled'}}" bindtap="onNextMonth"><text class="arrow">▸</text></view>
+    </view>
+
+    <!-- 星期标题 -->
+    <view class="weekdays">
+      <text class="weekday" wx:for="{{weekLabels}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <!-- 日期网格 -->
+    <view class="days-grid">
+      <view
+        class="day-cell {{item.isOtherMonth ? 'other-month' : ''}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
+        wx:for="{{calendarDays}}" wx:key="date"
+        bindtap="onDayTap" data-date="{{item.date}}"
+      >
+        <text class="day-num">{{item.day}}</text>
+        <view class="day-shift-label" wx:if="{{item.shift}}" style="background:{{item.shift.color}}">
+          <text>{{item.shift.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 选中日期信息卡 -->
+    <view class="date-card" wx:if="{{selectedShift}}">
+      <view class="dc-top">
+        <view class="dc-color" style="background:{{selectedShift.color}}"></view>
+        <view class="dc-info">
+          <text class="dc-date">{{selectedDate}}</text>
+          <text class="dc-name">{{selectedShift.name}}</text>
+          <text class="dc-time" wx:if="{{selectedShift.startTime}}">{{selectedShift.startTime}} - {{selectedShift.endTime}}</text>
+        </view>
+      </view>
+      <!-- 换班按钮 -->
+      <view class="dc-actions">
+        <text class="dc-btn" bindtap="onAdjust">换班</text>
+        <text class="dc-btn dc-clear" bindtap="onClearAdjust">恢复</text>
+      </view>
+    </view>
+
+    <!-- 换班弹窗 -->
+    <view class="adjust-mask" wx:if="{{isAdjusting}}" bindtap="onCancelAdjust">
+      <view class="adjust-panel" catchtap>
+        <text class="adj-title">{{selectedDate}} → 换成</text>
+        <view class="adj-options">
+          <view class="adj-option" wx:for="{{shiftsOptions}}" wx:key="*this" bindtap="onSelectAdjust" data-name="{{item}}">
+            {{item}}
+          </view>
+        </view>
+        <text class="adj-cancel" bindtap="onCancelAdjust">取消</text>
+      </view>
+    </view>
+  </block>
+</view>
