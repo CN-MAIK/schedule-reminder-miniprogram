@@ -162,8 +162,8 @@ Page({
       const db = wx.cloud.database();
       const col = db.collection('schedules');
       const data = { ...schedule };
-      if (data._cloudId) { const cid = data._cloudId; delete data._cloudId; delete data.completedDates; delete data.excludeDates; await col.doc(cid).update({ data }); return cid; }
-      if (this.data._cloudId) { delete data._cloudId; delete data.completedDates; delete data.excludeDates; await col.doc(this.data._cloudId).update({ data }); return this.data._cloudId; }
+      if (data._cloudId) { const cid = data._cloudId; delete data._cloudId; await col.doc(cid).update({ data }); return cid; }
+      if (this.data._cloudId) { delete data._cloudId; await col.doc(this.data._cloudId).update({ data }); return this.data._cloudId; }
       delete data._cloudId;
       const res = await col.add({ data });
       return res._id;
