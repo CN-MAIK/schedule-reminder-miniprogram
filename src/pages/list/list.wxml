@@ -48,6 +48,19 @@
     <text class="date-info-count" wx:else>暂无日程</text>
   </view>
 
+  <!-- 排班信息卡片（日历模式 + 有排班规则 + 排班到场） -->
+  <view class="shift-info-card" wx:if="{{showCalendar && hasShiftRule && selectedShift}}">
+    <view class="shift-info-bar" style="background: linear-gradient(135deg, {{selectedShift.color}}22, #fff); border-left-color: {{selectedShift.color}};">
+      <text class="shift-info-name">{{selectedShift.name}}</text>
+      <text class="shift-info-time" wx:if="{{selectedShift.startTime}}">{{selectedShift.startTime}} - {{selectedShift.endTime}}</text>
+    </view>
+  </view>
+  <view class="shift-info-card shift-no-shift" wx:elif="{{showCalendar && hasShiftRule && !selectedShift}}">
+    <view class="shift-info-bar" style="background: #f8f8f8; border-left-color: #ccc;">
+      <text class="shift-info-name" style="color:#999;">无排班</text>
+    </view>
+  </view>
+
   <!-- 筛选标签（非日历模式下显示） -->
   <view class="filter-bar" wx:if="{{!showCalendar && schedules.length}}">
     <view class="filter-tab {{filter === 'all' ? 'active' : ''}}" bindtap="onFilter" data-filter="all">全部</view>

@@ -27,9 +27,10 @@ function fmt(y, m, d) {
 function getShiftForDate(rule, dateStr) {
   if (!rule || !dateStr) return null;
 
-  // 1. 换班覆盖优先
+  // 1. 换班覆盖优先（兼容旧 string 和新 object 格式）
   if (rule.adjustments && rule.adjustments[dateStr] != null) {
-    const name = rule.adjustments[dateStr];
+    const adj = rule.adjustments[dateStr];
+    const name = typeof adj === 'string' ? adj : adj.shift;
     return rule.shifts[name] || null;
   }
 

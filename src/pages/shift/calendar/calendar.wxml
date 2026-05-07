@@ -43,12 +43,23 @@
           <text class="dc-date">{{selectedDate}}</text>
           <text class="dc-name">{{selectedShift.name}}</text>
           <text class="dc-time" wx:if="{{selectedShift.startTime}}">{{selectedShift.startTime}} - {{selectedShift.endTime}}</text>
+          <text class="dc-note" wx:if="{{adjustNote}}">📝 {{adjustNote}}</text>
         </view>
       </view>
       <!-- 换班按钮 -->
       <view class="dc-actions">
         <text class="dc-btn" bindtap="onAdjust">换班</text>
         <text class="dc-btn dc-clear" bindtap="onClearAdjust">恢复</text>
+      </view>
+    </view>
+
+    <!-- 选中日期日程（跨模块联动） -->
+    <view class="schedule-section" wx:if="{{hasDateSchedules}}">
+      <text class="section-label">📅 当天日程</text>
+      <view class="schedule-item {{item._instanceCompleted ? 'schedule-done' : ''}}" wx:for="{{dateSchedules}}" wx:key="id">
+        <text class="schedule-title">{{item.title}}</text>
+        <text class="schedule-time" wx:if="{{item.time}}">{{item.time}}</text>
+        <text class="schedule-repeat-tag" wx:if="{{item.repeatType && item.repeatType !== 'none'}}">🔁</text>
       </view>
     </view>
 
@@ -59,6 +70,14 @@
         <view class="adj-options">
           <view class="adj-option" wx:for="{{shiftsOptions}}" wx:key="*this" bindtap="onSelectAdjust" data-name="{{item}}">
             {{item}}
+          </view>
+        </view>
+        <!-- 备注输入 -->
+        <view class="adj-note-wrap">
+          <text class="adj-note-label">备注（选填）</text>
+          <view class="adj-note-input-box">
+            <input class="adj-note-input" value="{{adjustNote}}" bindinput="onNoteInput" maxlength="{{noteMaxLen}}" placeholder="如：请假、调休、替班…"/>
+            <text class="adj-note-count">{{adjustNote.length}}/{{noteMaxLen}}</text>
           </view>
         </view>
         <text class="adj-cancel" bindtap="onCancelAdjust">取消</text>

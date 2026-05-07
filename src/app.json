@@ -9,7 +9,7 @@
   ],
   "window": {
     "navigationBarBackgroundColor": "#07c160",
-    "navigationBarTitleText": "日程提醒",
+    "navigationBarTitleText": "日程·排班",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f5f5f5"
   },
@@ -21,11 +21,15 @@
     "list": [
       {
         "pagePath": "pages/list/list",
-        "text": "日程"
+        "text": "日程",
+        "iconPath": "images/tab-schedule.png",
+        "selectedIconPath": "images/tab-schedule-active.png"
       },
       {
         "pagePath": "pages/shift/home/home",
-        "text": "排班"
+        "text": "排班",
+        "iconPath": "images/tab-shift.png",
+        "selectedIconPath": "images/tab-shift-active.png"
       }
     ]
   },

@@ -40,7 +40,7 @@ exports.main = async (event, context) => {
             thing2: { value: item.title.substring(0, 20) },
             date4: { value: formatDateForMsg(item.date, item.time) }
           },
-          miniprogramState: 'developer'
+          miniprogramState: 'formal'
         });
 
         // 判断是否为重复日程

@@ -184,6 +184,32 @@
   background-color: #07c160;
 }
 
+/* ========== 排班信息卡片（跨模块联动） ========== */
+.shift-info-card {
+  margin: 0 32rpx;
+}
+
+.shift-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 24rpx;
+  border-left: 6rpx solid;
+  border-radius: 10rpx;
+  margin-bottom: 6rpx;
+}
+
+.shift-info-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.shift-info-time {
+  font-size: 24rpx;
+  color: #666;
+}
+
 /* ========== 空状态 ========== */
 .empty {
   display: flex;

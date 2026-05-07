@@ -81,7 +81,7 @@ Page({
         await db.collection('schedules').doc(src._cloudId).update({
           data: { completed: src.completed, completedDates: src.completedDates, updatedAt: src.updatedAt }
         });
-      } catch (err) { console.warn('云端同步失败:', err); }
+      } catch (err) {}
     }
   },
 
